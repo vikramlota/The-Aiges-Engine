@@ -3,12 +3,10 @@ Vishwas AI -- LangChain AI Compliance Ingestion Layer using Ollama
 """
 import json
 from typing import List, Optional
+import streamlit as st
 from pydantic import BaseModel, Field
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
-from dotenv import load_dotenv
-
-load_dotenv(override=True)
 
 class AIChecklistAudit(BaseModel):
     is_sponsored: bool = Field(
@@ -43,7 +41,11 @@ Analyze the given post caption carefully. Evaluate:
 
 Output a structured JSON response matching the schema. Do not include any conversational filler."""
 
-import os
+def _secret(key, default=None):
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return default
 
 def audit_post_with_ai(
     caption: str, 
@@ -72,14 +74,14 @@ def audit_post_with_ai(
         from langchain_google_genai import ChatGoogleGenerativeAI
         llm = ChatGoogleGenerativeAI(
             model=model_name or "gemini-3.6-flash",
-            google_api_key=api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"),
+            google_api_key=api_key or _secret("GEMINI_API_KEY") or _secret("GOOGLE_API_KEY"),
             temperature=0
         )
     elif provider == "groq":
         from langchain_groq import ChatGroq
         llm = ChatGroq(
             model=model_name or "llama-3.3-70b-versatile",
-            groq_api_key=api_key or os.getenv("GROQ_API_KEY"),
+            groq_api_key=api_key or _secret("GROQ_API_KEY"),
             temperature=0
         )
     else:  # "ollama"

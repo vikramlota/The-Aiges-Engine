@@ -1,10 +1,9 @@
-import os
 import re
 import time
 import requests
+import streamlit as st
 from pathlib import Path
 from typing import Optional, List, Tuple
-from dotenv import load_dotenv
 
 try:
     import pytesseract
@@ -18,7 +17,11 @@ from engine import PostInput, audit_post
 from rules import APPROVED_LABELS, AMBIGUOUS_LABELS
 from ai_engine import audit_post_with_ai
 
-load_dotenv(override=True)
+def _secret(key, default=None):
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return default
 
 DOWNLOAD_DIR = Path("temp_media")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
@@ -122,7 +125,7 @@ def fetch_single_yt_video(
     api_key: str, 
     enable_ai: bool = False, 
     provider: str = "ollama",
-    model_name: str = os.getenv("OLLAMA_MODEL_NAME", "qwen3:8b"), 
+    model_name: str = _secret("OLLAMA_MODEL_NAME", "qwen3:8b"), 
     base_url: str = "http://localhost:11434", 
     ai_api_key: Optional[str] = None
 ) -> Optional[UnifiedAuditReport]:
@@ -251,7 +254,7 @@ def run_yt_pipeline(
     limit=5, 
     enable_ai: bool = False, 
     provider: str = "ollama",
-    model_name: str = os.getenv("OLLAMA_MODEL_NAME", "qwen3:8b"), 
+    model_name: str = _secret("OLLAMA_MODEL_NAME", "qwen3:8b"), 
     base_url: str = "http://localhost:11434",
     ai_api_key: Optional[str] = None
 ) -> Tuple[str, List[UnifiedAuditReport]]:
@@ -346,9 +349,9 @@ def run_yt_pipeline(
 if __name__ == "__main__":
     import sys
     print("🎯 Running Standalone YouTube AI-Powered Audit Ingestion...")
-    api_key_env = os.getenv("YOUTUBE_API_KEY") 
+    api_key_env = _secret("YOUTUBE_API_KEY") or _secret("YT_API_KEY")
     if not api_key_env:
-        print("[!] YOUTUBE_API_KEY or YT_API_KEY environment variable not found in .env. Exiting.")
+        print("[!] YOUTUBE_API_KEY or YT_API_KEY not found in Streamlit secrets. Exiting.")
         sys.exit(1)
         
     test_channel = "@Google"

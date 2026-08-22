@@ -1,0 +1,12 @@
+streamlit
+requests
+pytesseract
+Pillow
+pydantic
+langchain-core
+langchain-ollama
+langchain-google-genai
+langchain-groq
+openpyxl
+transformers
+torch

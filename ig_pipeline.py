@@ -1,10 +1,9 @@
-import os
 import time
 import requests
+import streamlit as st
 from pathlib import Path
 import pytesseract
 from PIL import Image
-from dotenv import load_dotenv
 
 from datastruct import UnifiedAuditReport
 
@@ -57,11 +56,15 @@ try:
 except ImportError:
     VALIDATION_LOG_AVAILABLE = False
 
-# Load credentials securely from the .env file
-load_dotenv(override=True)
+def _secret(key, default=None):
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return default
 
-ACCESS_TOKEN = os.getenv("IG_ACCESS_TOKEN")
-IG_ACCOUNT_ID = os.getenv("IG_ACCOUNT_ID")
+
+ACCESS_TOKEN = _secret("IG_ACCESS_TOKEN")
+IG_ACCOUNT_ID = _secret("IG_ACCOUNT_ID")
 API_VERSION = "v25.0"
 BASE_URL = f"https://graph.facebook.com/{API_VERSION}/{IG_ACCOUNT_ID}"
 
@@ -346,7 +349,7 @@ def run_integrated_pipeline(
     target_username: str, 
     enable_ai: bool = False, 
     provider: str = "ollama",
-    model_name: str = os.getenv("OLLAMA_MODEL_NAME", "qwen3:8b"), 
+    model_name: str = _secret("OLLAMA_MODEL_NAME", "qwen3:8b"), 
     base_url: str = "http://localhost:11434",
     api_key: Optional[str] = None
 ):
@@ -487,7 +490,7 @@ def fetch_single_ig_post(
     ig_account_id: str, 
     enable_ai: bool = False, 
     provider: str = "ollama",
-    model_name: str = os.getenv("OLLAMA_MODEL_NAME", "qwen3:8b"), 
+    model_name: str = _secret("OLLAMA_MODEL_NAME", "qwen3:8b"), 
     base_url: str = "http://localhost:11434",
     api_key: Optional[str] = None
 ) -> Optional[UnifiedAuditReport]:
