@@ -56,37 +56,32 @@ EXAMPLES = {
     "Real money gaming": "#ad download this app and win real cash today, link in bio",
 }
 
-# --- Sidebar API & Ollama Configuration ---
+# --- Sidebar AI Configuration ---
 
 with st.sidebar:
-    st.title("🔑 API Credentials")
-    st.caption("Needed for Link Import and Account Audits.")
-    
-    yt_key = st.text_input("YouTube API Key v3", value=_secret("YOUTUBE_API_KEY") or _secret("YT_API_KEY"), type="password")
-    ig_token = st.text_input("Instagram Access Token", value=_secret("IG_ACCESS_TOKEN"), type="password")
-    ig_id = st.text_input("Instagram Business Account ID", value=_secret("IG_ACCOUNT_ID"))
-    
-    st.divider()
     st.title("🤖 AI Auditor (LangChain)")
     enable_ai = st.checkbox("Enable AI Auditor", value=True)
     
-    ai_provider_val = "ollama"
-    ai_model = _secret("OLLAMA_MODEL_NAME", "qwen3:8b")
+    yt_key = _secret("YOUTUBE_API_KEY") or _secret("YT_API_KEY")
+    ig_token = _secret("IG_ACCESS_TOKEN")
+    ig_id = _secret("IG_ACCOUNT_ID")
+    ai_provider_val = "gemini"
+    ai_model = _secret("GEMINI_MODEL_NAME", "gemini-3.6-flash")
     ollama_url = "http://localhost:11434"
-    ai_api_key = None
-    ai_provider_display = "Ollama"
+    ai_api_key = _secret("GEMINI_API_KEY") or _secret("GOOGLE_API_KEY")
+    ai_provider_display = "Gemini"
     
     if enable_ai:
-        ai_provider_choice = st.selectbox("AI Provider", ["Ollama (Local)", "Gemini", "Groq"])
+        ai_provider_choice = st.selectbox("AI Provider", ["Ollama (Local)", "Gemini", "Groq"], index=1)
         ai_provider_display = ai_provider_choice
         if ai_provider_choice == "Gemini":
             ai_provider_val = "gemini"
             ai_model = st.text_input("Gemini Model Name", value=_secret("GEMINI_MODEL_NAME", "gemini-3.6-flash"))
-            ai_api_key = st.text_input("Gemini API Key", value=_secret("GEMINI_API_KEY") or _secret("GOOGLE_API_KEY"), type="password")
+            ai_api_key = _secret("GEMINI_API_KEY") or _secret("GOOGLE_API_KEY")
         elif ai_provider_choice == "Groq":
             ai_provider_val = "groq"
             ai_model = st.text_input("Groq Model Name", value=_secret("GROQ_MODEL_NAME", "llama-3.3-70b-versatile"))
-            ai_api_key = st.text_input("Groq API Key", value=_secret("GROQ_API_KEY"), type="password")
+            ai_api_key = _secret("GROQ_API_KEY")
         else:
             ai_provider_val = "ollama"
             ai_model = st.text_input("Ollama Model Name", value=_secret("OLLAMA_MODEL_NAME", "qwen3:8b"))
@@ -95,7 +90,7 @@ with st.sidebar:
 # --- App Layout ---
 
 st.title("THE AIGES ENGINE")
-st.caption("Verify ASCI/CCPA compliance via traditional rules and local LLMs (via LangChain + Ollama).")
+st.caption("Verify ASCI/CCPA compliance via traditional rules and Gemini AI auditing.")
 
 tab_manual, tab_link, tab_account = st.tabs([
     "✍️ Single Post Manual Check", 
@@ -281,7 +276,7 @@ with tab_manual:
                         st.success(f"💡 **AI Recommended Fix:** {ai_report.recommended_fix}")
                     except Exception as e:
                         st.error(f"AI Check Failed: {e}")
-                        st.info("💡 Ensure Ollama is running (`ollama serve`) and the model is pulled (`ollama pull model_name`).")
+                        st.info("💡 Check that the selected AI provider is configured correctly in Streamlit secrets.")
 
 # --- TAB 2: IMPORT SINGLE LINK ---
 with tab_link:
@@ -402,7 +397,7 @@ with tab_link:
                             # AI-Powered LangChain Audit Result
                             if enable_ai and report.ai_status:
                                 st.divider()
-                                st.subheader("🤖 AI-Powered Audit (Ollama)")
+                                st.subheader(f"🤖 AI-Powered Audit ({ai_provider_display})")
                                 
                                 ai_color = STATUS_COLORS.get(report.ai_status, "#333")
                                 st.markdown(
